@@ -128,13 +128,15 @@ function save_intercept_data
 # 加载ip白名单配置文件
 function set_white_ip_file
 {
-    while read line;
-    do
-        local ip=`echo $line`;
-        if [[ -n ${ip} ]]; then
-            ipAllow[${ip}]=1;
-        fi
-    done < ${white_ip_file}
+    if [ -r ${white_ip_file} ]; then
+        while read line;
+        do
+            local ip=`echo $line`;
+            if [[ -n ${ip} ]]; then
+                ipAllow[${ip}]=1;
+            fi
+        done < ${white_ip_file}
+    fi
 }
 
 # 将需要检查的日志放入缓存日志文件
