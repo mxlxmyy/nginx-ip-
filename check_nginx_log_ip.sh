@@ -2,6 +2,8 @@
 
 # 日志格式： [08/Nov/2022:11:43:53
 
+# 配置开始 start
+
 # nginx日志文件
 current_log="/var/log/nginx/access.log"
 # 脚本文件夹地址
@@ -16,11 +18,23 @@ lasttime_log="${check_sh_dir}/intercept_ip/last_time.txt"
 max_se=605
 # 当访问次数大于此值时，加入屏蔽
 max_ip_access=100
-# 限制ip访问的配置文件
+# 已设置拒绝访问的IP地址列表数据保存文件
+intercept_list_file="${check_sh_dir}/intercept_ip/deny.iplist"
+# 限制ip访问的nginx配置文件
 intercept_file="/etc/nginx/conf.d/skwx_xianxiao.intercept_ip_list"
+# 加入黑名单后多久移出，单位秒
+hold_intercept_time=86400
 # ip白名单
 declare -A ipAllow
 #ipAllow["117.133.56.49"]=1;
+# ip白名单文件
+white_ip_file="/www/skwx_xx/data/ip/team_auth_ip.txt"
+
+# 配置结束 end
+
+
+# ip黑名单数据
+declare -A ipDeny
 
 # 将需要检查的日志放入缓存日志文件
 function cache_logs_to_ready
@@ -65,29 +79,74 @@ function count_last_logs
     /bin/cat ${filter_log} | awk '{print $1}' | sort -r | uniq -c | sort -r -n | head -300 > ${malice_access_ips}
 }
 
-# 将符合条件的ip加入到限制访问
-function count_filter_ip
+# 将符合条件的ip加入黑名单
+function check_ip_to_intercept
 {
+    # 当前时间
+    local now_time=`date +%s`;
+    local out_time=`expr ${now_time} - ${hold_intercept_time}`;
+
+    # 加载黑名单
     while read line;
     do
-        access_num=`echo $line | awk '{print $1}'`;
-        access_ip=`echo $line | awk '{print $2}'`;
+        local in_time=`echo $line | awk '{print $1}'`;
+        local in_ip=`echo $line | awk '{print $2}'`;
+        if [[ -n ${in_ip} ]]; then
+            if [[ ${in_time} -gt ${out_time} ]]; then
+                ipDeny[${in_ip}]=${in_time};
+            fi
+        fi
+    done < ${intercept_list_file}
+
+    # 验证
+    while read line;
+    do
+        local access_num=`echo $line | awk '{print $1}'`;
+        local access_ip=`echo $line | awk '{print $2}'`;
         if [[ -n ${access_ip} ]]; then
             if [[ ${access_num} -gt ${max_ip_access} ]]; then
                 if [[ ! ${ipAllow[${access_ip}]} ]]; then
-                    echo "deny ${access_ip};" >> ${intercept_file}
+                    ipDeny[${access_ip}]=${now_time};
                 fi
             fi
         fi
     done < ${malice_access_ips}
 }
 
+# 更新黑名单文件与nginx拒绝访问配置
+function save_intercept_data
+{
+    echo ''> ${intercept_list_file};
+    echo ''> ${intercept_file};
+
+    for i in ${!ipDeny[*]}; do
+        echo "${ipDeny[${i}]} ${i};" >> ${intercept_list_file}
+        echo "deny ${i};" >> ${intercept_file}
+    done
+}
+
+# 加载ip白名单配置文件
+function set_white_ip_file
+{
+    while read line;
+    do
+        local ip=`echo $line`;
+        if [[ -n ${ip} ]]; then
+            ipAllow[${ip}]=1;
+        fi
+    done < ${white_ip_file}
+}
+
 # 将需要检查的日志放入缓存日志文件
 cache_logs_to_ready
 # 统计ip出现的次数
 count_last_logs
-# 将符合条件的ip加入到限制访问
-count_filter_ip
+# 加载ip白名单配置文件
+set_white_ip_file
+# 将符合条件的ip加入黑名单
+check_ip_to_intercept
+# 更新黑名单文件与nginx拒绝访问配置
+save_intercept_data
 
 # 重新载入nginx配置
 docker exec nginx sh -c "nginx -s reload";
