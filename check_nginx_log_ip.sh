@@ -79,10 +79,37 @@ function cache_logs_to_ready
     done
 }
 
-# 统计ip出现的次数
+# 统计ip出现的次数，统计前三百个访问最多的ip地址
 function count_last_logs
 {
     /bin/cat ${filter_log} | awk '{print $1}' | sort -r | uniq -c -d | sort -r -n | head -n300 > ${malice_access_ips}
+}
+
+# 过滤统计到ip中的白名单ip
+function filter_access_white
+{
+    # 白名单ip加入两次，日志中统计到的ip加入一次，最终统计仅出现一次的ip即为未加入白名单中的ip
+    /bin/cat ${white_ip_file} | uniq -c | awk '{print $2}' > ${allow_ips_contrast};
+    /bin/cat ${white_ip_file} | uniq -c | awk '{print $2}' >> ${allow_ips_contrast};
+    /bin/cat ${malice_access_ips} | awk '{print $2}' >> ${allow_ips_contrast};
+
+    # 未加入白名单中的ip一次
+    /bin/cat ${allow_ips_contrast} | uniq -u > ${malice_access_ips2};
+
+    # 日志中统计到的ip里需要加入黑名单的ip加入一次
+    while read line;
+    do
+        local access_num=`echo $line | awk '{print $1}'`;
+        local access_ip=`echo $line | awk '{print $2}'`;
+        if [[ -n ${access_ip} ]]; then
+            if [[ ${access_num} -gt ${max_ip_access} ]]; then
+                ${access_ip} >> ${malice_access_ips2};
+            fi
+        fi
+    done < ${malice_access_ips}
+
+    # 最终统计出现两次的ip即为需要加入黑名单的ip
+    /bin/cat ${malice_access_ips2} | uniq -d > ${malice_access_ips3};
 }
 
 # 将符合条件的ip加入黑名单
@@ -118,37 +145,17 @@ function check_ip_to_intercept
 # 更新黑名单文件与nginx拒绝访问配置
 function save_intercept_data
 {
+    # 清空黑名单数据记录文件
     echo ''> ${intercept_list_file};
+    # 清空nginx限制ip访问配置文件
     echo ''> ${intercept_file};
 
     for i in ${!ipDeny[*]}; do
+        # 记录黑名单数据
         echo "${ipDeny[${i}]} ${i};" >> ${intercept_list_file}
+        # 记录nginx配置
         echo "deny ${i};" >> ${intercept_file}
     done
-}
-
-# 过滤统计到ip中的白名单ip
-function filter_access_white
-{
-    /bin/cat ${white_ip_file} | uniq -c | awk '{print $2}' > ${allow_ips_contrast};
-    /bin/cat ${white_ip_file} | uniq -c | awk '{print $2}' >> ${allow_ips_contrast};
-    /bin/cat ${malice_access_ips} | awk '{print $2}' >> ${allow_ips_contrast};
-
-    /bin/cat ${allow_ips_contrast} | uniq -u > ${malice_access_ips2};
-
-    # 验证
-    while read line;
-    do
-        local access_num=`echo $line | awk '{print $1}'`;
-        local access_ip=`echo $line | awk '{print $2}'`;
-        if [[ -n ${access_ip} ]]; then
-            if [[ ${access_num} -gt ${max_ip_access} ]]; then
-                ${access_ip} >> ${malice_access_ips2};
-            fi
-        fi
-    done < ${malice_access_ips}
-
-    /bin/cat ${malice_access_ips2} | uniq -d > ${malice_access_ips3};
 }
 
 
