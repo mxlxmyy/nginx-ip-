@@ -2,41 +2,41 @@
 统计nginx日志中ip请求次数，加入黑名单。
 
 ## 文件说明
-检查日志脚本文件：
-check_nginx_log_ip.sh
+**检查日志脚本文件**
+> check_nginx_log_ip.sh
 
-拆分日志脚本文件：
-cut_nginx_logs.sh
+**拆分日志脚本文件**
+> cut_nginx_logs.sh
 
-日志生成脚本文件：
-kill_nginx_pid.sh
+**日志生成脚本文件**
+> kill_nginx_pid.sh
 
-缓存日志文件：
-for_check_ip.log
+**缓存日志文件**
+> for_check_ip.log
 
-记录一段时间内ip访问统计：
-malice_access_ips.log
+**记录一段时间内ip访问统计**
+> malice_access_ips.log
 
-未在白名单中的ip：
-malice_access_ips2.log
+**未在白名单中的ip**
+> malice_access_ips2.log
 
-符合加入黑名单的ip：
-malice_access_ips3.log
+**符合加入黑名单的ip**
+> malice_access_ips3.log
 
-过滤白名单ip的缓存文件：
-allow_ips_contrast.log
+**过滤白名单ip的缓存文件**
+> allow_ips_contrast.log
 
-已设置拒绝访问的IP地址列表数据保存文件
-deny.iplist
+**已设置拒绝访问的IP地址列表数据保存文件**
+> deny.iplist
 
-上次检查时间：
-last_time.txt，在初次使用时请设置为0。
+**上次检查时间**
+> last_time.txt，在初次使用时请设置为0。
 
-ip白名单配置文件示例：
-allow_ip.txt
+**ip白名单配置文件示例**
+> allow_ip.txt
 
-定时任务运行日志：
-runlogs.log
+**定时任务运行日志**
+> runlogs.log
 
 ## 使用步骤：
 1. 将文件夹上传到服务器，修改脚本文件中的配置。
@@ -84,7 +84,7 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin
 7. 重新载入nginx配置。重新载入nginx配置的命令需要根据自身服务器情况设置。
 
 ## 配置说明
-1. check_nginx_log_ip.sh脚本中的配置
+1. **check_nginx_log_ip.sh 脚本中的配置**
 + current_log：nginx的日志文件地址。
 + check_sh_dir：脚本文件所在的文件夹地址。
 + max_se：最长检查多少秒之前的日志。代码执行时会以分钟为单位来计算，如果脚本执行时间为“2022年10月1日 12时30分”，当设置“60”时，则表示检查当前时间前一分钟的日志，即“12时29分”生成的日志，当设置“300”时，则表示计算当前时间前十分钟的日志，即“12时20分到12时29分”生成的日志。
@@ -95,6 +95,6 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin
 + white_ip_file：ip白名单文件。也可设置单独的白名单列表文件，文件的ip格式参考“allow_ip.txt”。
 + 另，脚本运行最后需要nginx重载配置，脚本默认执行“docker exec nginx sh -c "nginx -s reload";”，请根据服务器nginx部署情况修改。
 
-2. cut_nginx_logs.sh脚本中的配置
+2. **cut_nginx_logs.sh 脚本中的配置**
 + logs_dir：nginx日志文件夹地址。
 + logs_name：日志文件名，可配置多个，示例：“logs_name[0]="access1";logs_name[1]="access2";logs_name[2]="access3";”。
