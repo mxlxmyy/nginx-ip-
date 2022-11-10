@@ -2,8 +2,14 @@
 统计nginx日志中ip请求次数，加入黑名单。
 
 ## 文件说明
-脚本文件：
+检查日志脚本文件：
 check_nginx_log_ip.sh
+
+拆分日志脚本文件：
+cut_nginx_logs.sh
+
+日志生成脚本文件：
+kill_nginx_pid.sh
 
 缓存日志文件：
 for_check_ip.log
@@ -38,8 +44,10 @@ crontab -uroot -e
 运行环境，可不设置
 SHELL=/bin/sh
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-十分钟运行一次
+十分钟运行一次检查日志
 */10 * * * * /home/logs/nginx114/intercept_ip/check_nginx_log_ip.sh >> /home/logs/nginx114/intercept_ip/runlogs.log 2>&1
+每天23时38分运行拆分日志，拆分日志时间应避开检查日志的时间
+38 23 * * * /home/logs/nginx114/intercept_ip/cut_nginx_logs.sh
 `
 ## 脚本执行过程：
 1. 按照设置的时间段从nginx日志文件中查询日志并写入到缓存日志文件中。

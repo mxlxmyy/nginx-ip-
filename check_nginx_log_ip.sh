@@ -8,18 +8,10 @@
 current_log="/var/log/nginx/access.log"
 # 脚本文件夹地址
 check_sh_dir="/var/log/nginx"
-# 缓存一段时间的日志，检查
-filter_log="${check_sh_dir}/intercept_ip/for_check_ip.log"
-# 记录ip统计数据的文件
-malice_access_ips="${check_sh_dir}/intercept_ip/malice_access_ips.log"
-# 上次检查时间
-lasttime_log="${check_sh_dir}/intercept_ip/last_time.txt"
 # 最长检查多少秒之前的日志
 max_se=605
 # 当访问次数大于此值时，加入屏蔽
 max_ip_access=100
-# 已设置拒绝访问的IP地址列表数据保存文件
-intercept_list_file="${check_sh_dir}/intercept_ip/deny.iplist"
 # 限制ip访问的nginx配置文件
 intercept_file="/etc/nginx/conf.d/skwx_xianxiao.intercept_ip_list"
 # 加入黑名单后多久移出，单位秒
@@ -33,6 +25,14 @@ white_ip_file="/www/skwx_xx/data/ip/team_auth_ip.txt"
 # 配置结束 end
 
 
+# 缓存一段时间的日志，检查
+filter_log="${check_sh_dir}/intercept_ip/for_check_ip.log"
+# 记录ip统计数据的文件
+malice_access_ips="${check_sh_dir}/intercept_ip/malice_access_ips.log"
+# 上次检查时间
+lasttime_log="${check_sh_dir}/intercept_ip/last_time.txt"
+# 已设置拒绝访问的IP地址列表数据保存文件
+intercept_list_file="${check_sh_dir}/intercept_ip/deny.iplist"
 # ip黑名单数据
 declare -A ipDeny
 
