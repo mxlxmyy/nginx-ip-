@@ -27,7 +27,7 @@ white_ip_file="/www/skwx_xx/data/ip/team_auth_ip.txt"
 
 # 缓存一段时间的日志，检查
 filter_log="${check_sh_dir}/intercept_ip/for_check_ip.log"
-# 记录ip统计数据的文件
+# 记录一段时间内ip访问统计数据的文件
 malice_access_ips="${check_sh_dir}/intercept_ip/malice_access_ips.log"
 # 未在白名单中的ip数据文件
 malice_access_ips2="${check_sh_dir}/intercept_ip/malice_access_ips2.log"
