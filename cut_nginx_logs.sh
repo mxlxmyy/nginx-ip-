@@ -25,11 +25,11 @@ function re_log_file
 
     # 重命名日志文件
     mv ${file0} ${file1}
-
-    # 重置日志
-    docker exec nginx bash -c "/var/log/nginx/intercept_ip/kill_nginx_pid.sh"
 }
 
 for name in ${logs_name[*]}; do
     re_log_file ${name}
 done
+
+# 重置日志
+docker exec nginx bash -c "/var/log/nginx/intercept_ip/kill_nginx_pid.sh"
