@@ -29,6 +29,12 @@ white_ip_file="/www/skwx_xx/data/ip/team_auth_ip.txt"
 filter_log="${check_sh_dir}/intercept_ip/for_check_ip.log"
 # 记录ip统计数据的文件
 malice_access_ips="${check_sh_dir}/intercept_ip/malice_access_ips.log"
+# 未在白名单中的ip数据文件
+malice_access_ips2="${check_sh_dir}/intercept_ip/malice_access_ips2.log"
+# 符合加入黑名单的ip数据文件
+malice_access_ips3="${check_sh_dir}/intercept_ip/malice_access_ips3.log"
+# 过滤白名单ip的缓存文件
+allow_ips_contrast="${check_sh_dir}/intercept_ip/allow_ips_contrast.log"
 # 上次检查时间
 lasttime_log="${check_sh_dir}/intercept_ip/last_time.txt"
 # 已设置拒绝访问的IP地址列表数据保存文件
@@ -76,7 +82,7 @@ function cache_logs_to_ready
 # 统计ip出现的次数
 function count_last_logs
 {
-    /bin/cat ${filter_log} | awk '{print $1}' | sort -r | uniq -c | sort -r -n | head -300 > ${malice_access_ips}
+    /bin/cat ${filter_log} | awk '{print $1}' | sort -r | uniq -c -d | sort -r -n | head -n300 > ${malice_access_ips}
 }
 
 # 将符合条件的ip加入黑名单
@@ -101,16 +107,12 @@ function check_ip_to_intercept
     # 验证
     while read line;
     do
-        local access_num=`echo $line | awk '{print $1}'`;
-        local access_ip=`echo $line | awk '{print $2}'`;
-        if [[ -n ${access_ip} ]]; then
-            if [[ ${access_num} -gt ${max_ip_access} ]]; then
-                if [[ ! ${ipAllow[${access_ip}]} ]]; then
-                    ipDeny[${access_ip}]=${now_time};
-                fi
+        if [[ -n ${line} ]]; then
+            if [[ ! ${ipAllow[${line}]} ]]; then
+                ipDeny[${line}]=${now_time};
             fi
         fi
-    done < ${malice_access_ips}
+    done < ${malice_access_ips3}
 }
 
 # 更新黑名单文件与nginx拒绝访问配置
@@ -125,26 +127,37 @@ function save_intercept_data
     done
 }
 
-# 加载ip白名单配置文件
-function set_white_ip_file
+# 过滤统计到ip中的白名单ip
+function filter_access_white
 {
-    if [ -r ${white_ip_file} ]; then
-        while read line;
-        do
-            local ip=`echo $line`;
-            if [[ -n ${ip} ]]; then
-                ipAllow[${ip}]=1;
+    /bin/cat ${white_ip_file} | uniq -c | awk '{print $2}' > ${allow_ips_contrast};
+    /bin/cat ${white_ip_file} | uniq -c | awk '{print $2}' >> ${allow_ips_contrast};
+    /bin/cat ${malice_access_ips} | awk '{print $2}' >> ${allow_ips_contrast};
+
+    /bin/cat ${allow_ips_contrast} | uniq -u > ${malice_access_ips2};
+
+    # 验证
+    while read line;
+    do
+        local access_num=`echo $line | awk '{print $1}'`;
+        local access_ip=`echo $line | awk '{print $2}'`;
+        if [[ -n ${access_ip} ]]; then
+            if [[ ${access_num} -gt ${max_ip_access} ]]; then
+                ${access_ip} >> ${malice_access_ips2};
             fi
-        done < ${white_ip_file}
-    fi
+        fi
+    done < ${malice_access_ips}
+
+    /bin/cat ${malice_access_ips2} | uniq -d > ${malice_access_ips3};
 }
+
 
 # 将需要检查的日志放入缓存日志文件
 cache_logs_to_ready
 # 统计ip出现的次数
 count_last_logs
-# 加载ip白名单配置文件
-set_white_ip_file
+# 过滤统计到ip中的白名单ip
+filter_access_white
 # 将符合条件的ip加入黑名单
 check_ip_to_intercept
 # 更新黑名单文件与nginx拒绝访问配置
