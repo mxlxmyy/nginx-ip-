@@ -45,34 +45,34 @@ runlogs.log
 2. 在nginx配置文件夹中新建文件“site.intercept_ip_list”，用于设置需要拦截的ip地址。文件名称可自定义，只需要在脚本配置中设置正确即可。
 
 3. 将第二步中新建的文件包含到网站的nginx配置中。
-(```)
+```
 server {
     listen 80;
     ...
 	include site.intercept_ip_list
 	...
 }
-(```)
+```
 
 4. 设置定时执行“check_nginx_log_ip.sh”脚本。
 + 命令行输入：
-(```)
+```
 crontab -uroot -e
-(```)
+```
 + 定时任务设置：
 运行环境，可不设置
-(```)
+```
 SHELL=/bin/sh
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-(```)
+```
 十分钟运行一次检查日志
-(```)
+```
 */10 * * * * /home/logs/nginx114/intercept_ip/check_nginx_log_ip.sh >> /home/logs/nginx114/intercept_ip/runlogs.log 2>&1
-(```)
+```
 每天23时38分运行拆分日志，拆分日志时间应避开检查日志的时间
-(```)
+```
 38 23 * * * /home/logs/nginx114/intercept_ip/cut_nginx_logs.sh
-(```)
+```
 
 ## 脚本执行过程：
 1. 按照设置的时间段从nginx日志文件中查询日志并写入到缓存日志文件中。
