@@ -103,7 +103,7 @@ function filter_access_white
         local access_ip=`echo $line | awk '{print $2}'`;
         if [[ -n ${access_ip} ]]; then
             if [[ ${access_num} -gt ${max_ip_access} ]]; then
-                ${access_ip} >> ${malice_access_ips2};
+                echo "${access_ip}" >> ${malice_access_ips2};
             fi
         fi
     done < ${malice_access_ips}
