@@ -89,12 +89,12 @@ function count_last_logs
 function filter_access_white
 {
     # 白名单ip加入两次，日志中统计到的ip加入一次，最终统计仅出现一次的ip即为未加入白名单中的ip
-    /bin/cat ${white_ip_file} | uniq -c | awk '{print $2}' > ${allow_ips_contrast};
-    /bin/cat ${white_ip_file} | uniq -c | awk '{print $2}' >> ${allow_ips_contrast};
+    /bin/cat ${white_ip_file} | sort -r | uniq -c | awk '{print $2}' > ${allow_ips_contrast};
+    /bin/cat ${white_ip_file} | sort -r | uniq -c | awk '{print $2}' >> ${allow_ips_contrast};
     /bin/cat ${malice_access_ips} | awk '{print $2}' >> ${allow_ips_contrast};
 
     # 未加入白名单中的ip一次
-    /bin/cat ${allow_ips_contrast} | uniq -u > ${malice_access_ips2};
+    /bin/cat ${allow_ips_contrast} | sort -r | uniq -u > ${malice_access_ips2};
 
     # 日志中统计到的ip里需要加入黑名单的ip加入一次
     while read line;
@@ -109,7 +109,7 @@ function filter_access_white
     done < ${malice_access_ips}
 
     # 最终统计出现两次的ip即为需要加入黑名单的ip
-    /bin/cat ${malice_access_ips2} | uniq -d > ${malice_access_ips3};
+    /bin/cat ${malice_access_ips2} | sort -r | uniq -d > ${malice_access_ips3};
 }
 
 # 将符合条件的ip加入黑名单
