@@ -1,4 +1,5 @@
 #!/bin/bash
+export LANG="en_US.UTF-8"
 
 # 日志格式： [08/Nov/2022:11:43:53
 
@@ -152,7 +153,7 @@ function save_intercept_data
 
     for i in ${!ipDeny[*]}; do
         # 记录黑名单数据
-        echo "${ipDeny[${i}]} ${i};" >> ${intercept_list_file}
+        echo "${ipDeny[${i}]} ${i}" >> ${intercept_list_file}
         # 记录nginx配置
         echo "deny ${i};" >> ${intercept_file}
     done
